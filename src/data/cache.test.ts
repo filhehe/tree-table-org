@@ -40,4 +40,15 @@ describe('кэш org-tree — ключ по payload', () => {
     expect(peekOrgTreeCache('')?.snapshot.index.nodesById.size).toBe(1)
     expect(peekOrgTreeCache('?scenario=empty')?.snapshot.index.nodesById.size).toBe(0)
   })
+
+  it('повторный GET с теми же узлами возвращает мемоизированные агрегаты', async () => {
+    vi.mocked(fetchOrgTree).mockResolvedValueOnce(tree)
+    const first = await fetchOrgTreeSnapshot(new AbortController().signal, '')
+
+    vi.mocked(fetchOrgTree).mockResolvedValueOnce([{ ...tree[0] }])
+    const second = await fetchOrgTreeSnapshot(new AbortController().signal, '')
+
+    expect(second).toBe(first)
+    expect(second.aggregates).toBe(first.aggregates)
+  })
 })

@@ -1,6 +1,7 @@
 import styled from "styled-components";
 
 const HeaderBar = styled.header`
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.space.xs};

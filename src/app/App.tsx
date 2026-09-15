@@ -2,22 +2,38 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import { useOrgTree } from '@/data/useOrgTree'
 import { Header } from '@/ui/Header'
-import { OrgTree } from '@/ui/OrgTree'
-import { StatusPanel } from '@/ui/StatusPanel'
+import { Workspace } from '@/ui/Workspace'
 
 const Shell = styled.div`
-  min-height: 100vh;
+  height: 100%;
+  width: 100%;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+`
+
+const Stage = styled.div`
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: ${({ theme }) => theme.space.lg} ${({ theme }) => theme.space.xl};
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 `
 
 const Main = styled.main`
   flex: 1;
-  margin: ${({ theme }) => theme.space.lg} ${({ theme }) => theme.space.xl};
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius};
-  overflow: auto;
+  overflow: hidden;
 `
 
 export function App() {
@@ -26,40 +42,33 @@ export function App() {
   return (
     <Shell>
       <Header onRemount={() => setViewId((current) => current + 1)} />
-      <Main>
-        <Dashboard key={viewId} />
-      </Main>
+      <Stage>
+        <Main>
+          <Dashboard key={viewId} />
+        </Main>
+      </Stage>
     </Shell>
   )
 }
 
 function Dashboard() {
   const tree = useOrgTree()
-
-  if (tree.status === 'loading' || tree.status === 'idle') {
-    return <StatusPanel kind="loading" />
-  }
-
-  if (tree.status === 'error') {
-    return (
-      <StatusPanel kind="error" message={tree.error?.message} onRetry={tree.retry} />
-    )
-  }
-
-  if (tree.status === 'empty') {
-    return <StatusPanel kind="empty" />
-  }
-
   const roots = tree.childrenByParent.get(null) ?? []
 
   return (
-    <OrgTree
+    <Workspace
+      status={tree.status}
+      onRetry={tree.retry}
       roots={roots}
       nodesById={tree.nodesById}
       childrenByParent={tree.childrenByParent}
       aggregates={tree.aggregates}
       expandedIds={tree.expandedIds}
+      selectedId={tree.selectedId}
+      nameQuery={tree.nameQuery}
       onToggle={tree.toggleExpanded}
+      onSelect={tree.selectNode}
+      onNameQuery={tree.setNameQuery}
     />
   )
 }

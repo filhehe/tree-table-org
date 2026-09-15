@@ -1,16 +1,11 @@
 import { parseOrgTree } from '@/domain/schema'
-import { aggregateTree } from '@/domain/aggregate'
-import { buildTree } from '@/domain/tree'
-import type { Aggregate, OrgIndex } from '@/domain/types'
+import { memoizeOrgSnapshot, type OrgSnapshot } from '@/domain/snapshot'
 import { fetchOrgTree } from '@/data/http'
 import { orgTreeCacheKey } from '@/data/orgTreeCacheKey'
 
 export const STALE_TIME_MS = 5_000
 
-export type OrgSnapshot = {
-  index: OrgIndex
-  aggregates: Map<string, Aggregate>
-}
+export type { OrgSnapshot }
 
 type CacheEntry = {
   snapshot: OrgSnapshot
@@ -52,18 +47,13 @@ export async function fetchOrgTreeSnapshot(
   const request = (async () => {
     const raw = await fetchOrgTree(signal, search)
     const nodes = parseOrgTree(raw)
-    const index = buildTree(nodes)
-    const snapshot: OrgSnapshot = {
-      index,
-      aggregates: aggregateTree(index),
-    }
-
     const mutationAt = lastMutationAt.get(key) ?? 0
     const current = entries.get(key)
     if (startedAt < mutationAt && current) {
       return current.snapshot
     }
 
+    const snapshot = memoizeOrgSnapshot(nodes, current?.snapshot)
     entries.set(key, { snapshot, fetchedAt: Date.now() })
     lastMutationAt.set(key, Math.max(mutationAt, startedAt))
     return snapshot

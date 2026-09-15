@@ -4,6 +4,8 @@ import type { Aggregate, OrgNode } from '@/domain/types'
 
 const Tree = styled.div`
   padding: ${({ theme }) => theme.space.md} ${({ theme }) => theme.space.lg};
+  width: max-content;
+  min-width: 100%;
 `
 
 const Branch = styled.div`
@@ -14,7 +16,6 @@ const NodeRow = styled.div<{ $connect: boolean }>`
   position: relative;
   display: flex;
   width: fit-content;
-  max-width: 100%;
 
   ${({ $connect, theme }) =>
     $connect
@@ -26,7 +27,7 @@ const NodeRow = styled.div<{ $connect: boolean }>`
       top: 50%;
       width: 13px;
       border-top: 1px dotted ${theme.colors.muted};
-      z-index: 2;
+      z-index: 0;
     }
   `
       : ''}
@@ -36,8 +37,19 @@ const LastRailMask = styled.span`
   position: absolute;
   left: -14px;
   top: 50%;
+  bottom: 0;
   width: 4px;
-  height: 10000px;
+  background: ${({ theme }) => theme.colors.surface};
+  z-index: 1;
+  pointer-events: none;
+`
+
+const LastRailFill = styled.span`
+  position: absolute;
+  left: -14px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
   background: ${({ theme }) => theme.colors.surface};
   z-index: 1;
   pointer-events: none;
@@ -46,7 +58,6 @@ const LastRailMask = styled.span`
 const ChildList = styled.div`
   position: relative;
   padding-left: 24px;
-  overflow: hidden;
 
   &::before {
     content: '';
@@ -64,7 +75,9 @@ type OrgTreeProps = {
   childrenByParent: Map<string | null, string[]>
   aggregates: Map<string, Aggregate>
   expandedIds: Set<string>
+  selectedId: string | null
   onToggle: (id: string) => void
+  onSelect: (id: string) => void
 }
 
 export function OrgTree({
@@ -73,8 +86,11 @@ export function OrgTree({
   childrenByParent,
   aggregates,
   expandedIds,
+  selectedId,
   onToggle,
+  onSelect,
 }: OrgTreeProps) {
+
   return (
     <Tree role="tree" aria-label="Орг-структура">
       {roots.map((id, index) => (
@@ -85,9 +101,11 @@ export function OrgTree({
           childrenByParent={childrenByParent}
           aggregates={aggregates}
           expandedIds={expandedIds}
+          selectedId={selectedId}
           isLast={index === roots.length - 1}
           isRoot
           onToggle={onToggle}
+          onSelect={onSelect}
         />
       ))}
     </Tree>
@@ -100,9 +118,11 @@ type BranchProps = {
   childrenByParent: Map<string | null, string[]>
   aggregates: Map<string, Aggregate>
   expandedIds: Set<string>
+  selectedId: string | null
   isLast: boolean
   isRoot: boolean
   onToggle: (id: string) => void
+  onSelect: (id: string) => void
 }
 
 function OrgTreeBranch({
@@ -111,9 +131,11 @@ function OrgTreeBranch({
   childrenByParent,
   aggregates,
   expandedIds,
+  selectedId,
   isLast,
   isRoot,
   onToggle,
+  onSelect,
 }: BranchProps) {
   const node = nodesById.get(id)
   if (!node) return null
@@ -131,11 +153,14 @@ function OrgTreeBranch({
           aggregate={aggregates.get(id)}
           hasChildren={hasChildren}
           expanded={expanded}
+          selected={id === selectedId}
           onToggle={onToggle}
+          onSelect={onSelect}
         />
       </NodeRow>
       {hasChildren && expanded ? (
         <ChildList>
+          {!isRoot && isLast ? <LastRailFill /> : null}
           {children.map((childId, index) => (
             <OrgTreeBranch
               key={childId}
@@ -144,9 +169,11 @@ function OrgTreeBranch({
               childrenByParent={childrenByParent}
               aggregates={aggregates}
               expandedIds={expandedIds}
+              selectedId={selectedId}
               isLast={index === children.length - 1}
               isRoot={false}
               onToggle={onToggle}
+              onSelect={onSelect}
             />
           ))}
         </ChildList>

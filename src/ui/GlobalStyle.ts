@@ -6,7 +6,42 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   html, body, #root {
-    min-height: 100%;
+    width: 100%;
+    height: 100%;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: ${({ theme }) => theme.colors.border} ${({ theme }) => theme.colors.surface};
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.colors.surface};
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.border};
+    border: 2px solid ${({ theme }) => theme.colors.surface};
+    border-radius: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: ${({ theme }) => theme.colors.muted};
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: ${({ theme }) => theme.colors.surface};
   }
 
   body {

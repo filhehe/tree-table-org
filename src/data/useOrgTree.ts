@@ -3,6 +3,8 @@ import {
   getOrgTreeServerSnapshot,
   getOrgTreeSnapshot,
   retryOrgTree,
+  selectNode,
+  setNameQuery,
   subscribeOrgTree,
   toggleExpanded,
 } from '@/data/store'
@@ -18,5 +20,7 @@ export function useOrgTree() {
     ...state,
     retry: retryOrgTree,
     toggleExpanded,
+    selectNode,
+    setNameQuery,
   }
 }

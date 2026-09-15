@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { OrgGraphError } from '@/domain/types'
-import { buildTree, defaultExpandedIds, pruneExpandedIds } from '@/domain/tree'
+import { buildTree, defaultExpandedIds, expandAncestors, pruneExpandedIds } from '@/domain/tree'
 import { orgNode } from '@/domain/orgNode.fixture'
 
 describe('buildTree — инварианты графа', () => {
@@ -74,6 +74,20 @@ describe('defaultExpandedIds', () => {
   it('не раскрывает лист', () => {
     const index = buildTree([orgNode('solo', 'Solo')])
     expect(defaultExpandedIds(index).has('solo')).toBe(false)
+  })
+})
+
+describe('expandAncestors', () => {
+  it('раскрывает предков выбранного узла, сам узел не трогает', () => {
+    const index = buildTree([
+      orgNode('div', 'Div'),
+      orgNode('dep', 'Dep', { parentId: 'div' }),
+      orgNode('team', 'Team', { parentId: 'dep' }),
+    ])
+    const expanded = expandAncestors('team', index.nodesById, new Set())
+    expect(expanded.has('div')).toBe(true)
+    expect(expanded.has('dep')).toBe(true)
+    expect(expanded.has('team')).toBe(false)
   })
 })
 

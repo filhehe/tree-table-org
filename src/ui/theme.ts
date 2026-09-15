@@ -9,6 +9,7 @@ export const theme: DefaultTheme = {
     text: '#e8eef4',
     muted: '#8b9aab',
     accent: '#3d9c8f',
+    selected: '#1c3a36',
     danger: '#d46565',
     performance: {
       low: '#d46565',

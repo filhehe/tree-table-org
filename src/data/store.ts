@@ -1,7 +1,7 @@
 import { fetchOrgTreeSnapshot, peekOrgTreeCache, type OrgSnapshot } from '@/data/cache'
 import { readOrgTreeSearch } from '@/data/http'
 import { orgTreeCacheKey } from '@/data/orgTreeCacheKey'
-import { defaultExpandedIds, pruneExpandedIds } from '@/domain/tree'
+import { defaultExpandedIds, expandAncestors, pruneExpandedIds } from '@/domain/tree'
 import type { Aggregate, OrgNode } from '@/domain/types'
 
 export type OrgTreeStatus = 'idle' | 'loading' | 'error' | 'empty' | 'ready'
@@ -13,6 +13,8 @@ export type OrgTreeState = {
   childrenByParent: Map<string | null, string[]>
   aggregates: Map<string, Aggregate>
   expandedIds: Set<string>
+  selectedId: string | null
+  nameQuery: string
 }
 
 function createEmptyState(status: OrgTreeStatus): OrgTreeState {
@@ -23,6 +25,8 @@ function createEmptyState(status: OrgTreeStatus): OrgTreeState {
     childrenByParent: new Map(),
     aggregates: new Map(),
     expandedIds: new Set(),
+    selectedId: null,
+    nameQuery: '',
   }
 }
 
@@ -33,6 +37,7 @@ let subscriberCount = 0
 let controller: AbortController | null = null
 let expandInitialized = false
 let lastCacheKey: string | null = null
+let lastSnapshot: OrgSnapshot | null = null
 
 function emit() {
   for (const listener of listeners) listener()
@@ -45,20 +50,38 @@ function setState(next: OrgTreeState) {
 
 function commitSnapshot(snapshot: OrgSnapshot, cacheKey: string) {
   const sameDataset = expandInitialized && lastCacheKey === cacheKey
+  const status = snapshot.index.nodesById.size === 0 ? 'empty' : 'ready'
+
+  if (
+    snapshot === lastSnapshot &&
+    sameDataset &&
+    (state.status === 'ready' || state.status === 'empty')
+  ) {
+    return
+  }
+
   const expandedIds = sameDataset
     ? pruneExpandedIds(state.expandedIds, snapshot.index)
     : defaultExpandedIds(snapshot.index)
 
+  const selectedId =
+    sameDataset && state.selectedId && snapshot.index.nodesById.has(state.selectedId)
+      ? state.selectedId
+      : null
+
   expandInitialized = true
   lastCacheKey = cacheKey
+  lastSnapshot = snapshot
 
   setState({
-    status: snapshot.index.nodesById.size === 0 ? 'empty' : 'ready',
+    status,
     error: null,
     nodesById: snapshot.index.nodesById,
     childrenByParent: snapshot.index.childrenByParent,
     aggregates: snapshot.aggregates,
     expandedIds,
+    selectedId,
+    nameQuery: sameDataset ? state.nameQuery : '',
   })
 }
 
@@ -138,6 +161,7 @@ export function getOrgTreeServerSnapshot(): OrgTreeState {
 export function retryOrgTree() {
   expandInitialized = false
   lastCacheKey = null
+  lastSnapshot = null
   controller?.abort()
   controller = new AbortController()
   void hydrate(controller.signal, { force: true })
@@ -148,4 +172,18 @@ export function toggleExpanded(id: string) {
   if (next.has(id)) next.delete(id)
   else next.add(id)
   setState({ ...state, expandedIds: next })
+}
+
+export function selectNode(id: string) {
+  if (!state.nodesById.has(id)) return
+  setState({
+    ...state,
+    selectedId: id,
+    expandedIds: expandAncestors(id, state.nodesById, state.expandedIds),
+  })
+}
+
+export function setNameQuery(nameQuery: string) {
+  if (state.nameQuery === nameQuery) return
+  setState({ ...state, nameQuery })
 }

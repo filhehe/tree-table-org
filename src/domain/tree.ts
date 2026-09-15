@@ -72,6 +72,22 @@ export function defaultExpandedIds(index: OrgIndex): Set<string> {
   return expanded;
 }
 
+export function expandAncestors(
+  id: string,
+  nodesById: Map<string, OrgNode>,
+  expandedIds: Set<string>,
+): Set<string> {
+  const next = new Set(expandedIds)
+  let current = nodesById.get(id)?.parentId ?? null
+
+  while (current) {
+    next.add(current)
+    current = nodesById.get(current)?.parentId ?? null
+  }
+
+  return next
+}
+
 export function pruneExpandedIds(
   expandedIds: Set<string>,
   index: OrgIndex,

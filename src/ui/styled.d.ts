@@ -10,6 +10,7 @@ declare module 'styled-components' {
       text: string
       muted: string
       accent: string
+      selected: string
       danger: string
       performance: {
         low: string

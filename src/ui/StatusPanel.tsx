@@ -1,112 +1,128 @@
-import styled, { keyframes } from 'styled-components'
+import styled, { css } from 'styled-components'
 
-const Panel = styled.section`
+const CenterPanel = styled.section`
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: ${({ theme }) => theme.space.md};
   padding: ${({ theme }) => theme.space.xl};
-  color: ${({ theme }) => theme.colors.muted};
+  text-align: center;
 `
 
-const Title = styled.h2`
+const Title = styled.p`
   margin: 0;
   color: ${({ theme }) => theme.colors.text};
   font-size: 16px;
   font-weight: 600;
 `
 
-const Message = styled.p`
-  margin: 0;
-  max-width: 52ch;
+const Face = styled.span`
+  font-size: 48px;
+  line-height: 1;
 `
 
-const RetryButton = styled.button`
-  align-self: flex-start;
+const Actions = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+`
+
+const actionState = css`
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceHover};
+    border-color: ${({ theme }) => theme.colors.muted};
+    color: ${({ theme }) => theme.colors.text};
+  }
+
+  &:active {
+    background: ${({ theme }) => theme.colors.selected};
+    border-color: ${({ theme }) => theme.colors.accent};
+    color: ${({ theme }) => theme.colors.text};
+    transform: translateY(1px);
+  }
+
+  &:focus-visible {
+    outline: 1px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 2px;
+  }
+`
+
+const ActionButton = styled.button`
   border: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
+  background: ${({ theme }) => theme.colors.bg};
   color: ${({ theme }) => theme.colors.text};
   border-radius: ${({ theme }) => theme.radius};
   padding: 8px 14px;
   cursor: pointer;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.surfaceHover};
-  }
+  ${actionState}
 `
 
-const pulse = keyframes`
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 0.9; }
+const SupportLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 28ch;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.muted};
+  border-radius: ${({ theme }) => theme.radius};
+  padding: 8px 14px;
+  text-decoration: none;
+  line-height: 1.35;
+  ${actionState}
 `
 
-const SkeletonList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.space.sm};
-`
-
-const SkeletonBar = styled.div<{ $width: string; $indent: string }>`
-  height: 14px;
-  width: ${({ $width }) => $width};
-  margin-left: ${({ $indent }) => $indent};
-  border-radius: 999px;
-  background: ${({ theme }) => theme.colors.border};
-  animation: ${pulse} 1.2s ease-in-out infinite;
-`
-
-const SKELETON_BARS = [
-  { width: '42%', indent: '0px' },
-  { width: '36%', indent: '22px' },
-  { width: '48%', indent: '44px' },
-  { width: '40%', indent: '44px' },
-  { width: '34%', indent: '22px' },
-  { width: '46%', indent: '44px' },
-  { width: '38%', indent: '0px' },
-  { width: '31%', indent: '22px' },
-] as const
+const SUPPORT_HREF =
+  'mailto:support@orgtree.dev?subject=%D0%9E%D1%88%D0%B8%D0%B1%D0%BA%D0%B0%20%D0%B7%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B8%20%D0%BE%D1%80%D0%B3-%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%82%D1%83%D1%80%D1%8B'
 
 type StatusPanelProps = {
-  kind: 'loading' | 'error' | 'empty'
-  message?: string
+  kind: 'error' | 'empty'
   onRetry?: () => void
 }
 
-export function StatusPanel({ kind, message, onRetry }: StatusPanelProps) {
-  if (kind === 'loading') {
-    return (
-      <Panel aria-busy="true" aria-live="polite">
-        <Title>Загрузка дерева</Title>
-        <SkeletonList>
-          {SKELETON_BARS.map((bar) => (
-            <SkeletonBar
-              key={`${bar.width}-${bar.indent}`}
-              $width={bar.width}
-              $indent={bar.indent}
-            />
-          ))}
-        </SkeletonList>
-      </Panel>
-    )
-  }
-
+export function StatusPanel({ kind, onRetry }: StatusPanelProps) {
   if (kind === 'empty') {
     return (
-      <Panel>
-        <Title>Пустой ответ</Title>
-        <Message>API вернул валидный пустой список подразделений.</Message>
-      </Panel>
+      <CenterPanel>
+        <Title>Данных пока нет</Title>
+        <Face role="img" aria-label="Робот">
+          🤖
+        </Face>
+        {onRetry ? (
+          <ActionButton type="button" onClick={onRetry}>
+            Обновить
+          </ActionButton>
+        ) : null}
+      </CenterPanel>
     )
   }
 
   return (
-    <Panel role="alert">
-      <Title>Не удалось загрузить данные</Title>
-      <Message>{message ?? 'Неизвестная ошибка'}</Message>
-      {onRetry ? (
-        <RetryButton type="button" onClick={onRetry}>
-          Повторить
-        </RetryButton>
-      ) : null}
-    </Panel>
+    <CenterPanel role="alert">
+      <Title>У нас что-то сломалось</Title>
+      <Face role="img" aria-label="Робот растерян">
+        😵
+      </Face>
+      <Actions>
+        {onRetry ? (
+          <ActionButton type="button" onClick={onRetry}>
+            Обновить
+          </ActionButton>
+        ) : null}
+        <SupportLink href={SUPPORT_HREF}>
+          Если ошибка будет повторяться, напишите нам
+        </SupportLink>
+      </Actions>
+    </CenterPanel>
   )
 }

@@ -1,24 +1,29 @@
 import styled from 'styled-components'
+import { formatHeadcount, formatPerformance } from '@/domain/format'
 import { performanceBand } from '@/domain/performance'
 import type { Aggregate, OrgNode } from '@/domain/types'
 
-const Card = styled.button<{ $clickable: boolean }>`
+const Card = styled.button<{ $selected: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 280px;
   margin: 10px 10px 10px 0;
   padding: 10px 12px;
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid
+    ${({ theme, $selected }) => ($selected ? theme.colors.accent : theme.colors.border)};
   border-radius: ${({ theme }) => theme.radius};
-  background: ${({ theme }) => theme.colors.bg};
+  background: ${({ theme, $selected }) =>
+    $selected ? theme.colors.selected : theme.colors.bg};
   color: ${({ theme }) => theme.colors.text};
   text-align: left;
-  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
 
   &:hover {
-    background: ${({ theme, $clickable }) =>
-      $clickable ? theme.colors.surfaceHover : theme.colors.bg};
+    background: ${({ theme, $selected }) =>
+      $selected ? theme.colors.selected : theme.colors.surfaceHover};
   }
 `
 
@@ -29,18 +34,27 @@ const CardTop = styled.span`
   min-width: 0;
 `
 
-const Chevron = styled.span<{ $open: boolean; $hidden: boolean }>`
+const ChevronHit = styled.span<{ $hidden: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  visibility: ${({ $hidden }) => ($hidden ? 'hidden' : 'visible')};
+  cursor: ${({ $hidden }) => ($hidden ? 'default' : 'pointer')};
+`
+
+const Chevron = styled.span<{ $open: boolean }>`
   display: inline-block;
   width: 0;
   height: 0;
-  flex-shrink: 0;
   border-style: solid;
   border-width: 5px 0 5px 7px;
   border-color: transparent transparent transparent currentColor;
   color: ${({ theme }) => theme.colors.muted};
   transform: rotate(${({ $open }) => ($open ? '90deg' : '0deg')});
   transform-origin: 40% 50%;
-  visibility: ${({ $hidden }) => ($hidden ? 'hidden' : 'visible')};
 `
 
 const Name = styled.span`
@@ -152,12 +166,6 @@ function bandLabel(band: 'low' | 'mid' | 'high') {
   return 'Высокая'
 }
 
-function formatPerformance(value: number) {
-  return `${Math.round(value)}%`
-}
-
-const headcountFormat = new Intl.NumberFormat('ru-RU')
-
 function unitTitle(level: number) {
   if (level === 0) return 'Сотрудников дивизиона'
   if (level === 1) return 'Сотрудников отдела'
@@ -176,7 +184,9 @@ type OrgTreeNodeRowProps = {
   aggregate: Aggregate | undefined
   hasChildren: boolean
   expanded: boolean
+  selected: boolean
   onToggle: (id: string) => void
+  onSelect: (id: string) => void
 }
 
 export function OrgTreeNodeRow({
@@ -184,7 +194,9 @@ export function OrgTreeNodeRow({
   aggregate,
   hasChildren,
   expanded,
+  selected,
   onToggle,
+  onSelect,
 }: OrgTreeNodeRowProps) {
   const totalHeadcount = aggregate?.totalHeadcount ?? node.headcount
   const ownHeadcount = node.headcount
@@ -199,13 +211,22 @@ export function OrgTreeNodeRow({
       type="button"
       role="treeitem"
       aria-expanded={hasChildren ? expanded : undefined}
-      $clickable={hasChildren}
-      onClick={() => {
-        if (hasChildren) onToggle(node.id)
-      }}
+      aria-selected={selected}
+      data-node-id={node.id}
+      $selected={selected}
+      onClick={() => onSelect(node.id)}
     >
         <CardTop>
-          <Chevron $open={expanded} $hidden={!hasChildren} />
+          <ChevronHit
+            $hidden={!hasChildren}
+            onClick={(event) => {
+              event.stopPropagation()
+              if (hasChildren) onToggle(node.id)
+            }}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <Chevron $open={expanded} />
+          </ChevronHit>
           <Name>{node.name}</Name>
           <DotHit
             aria-label={`Эффективность ${formatPerformance(performance)}`}
@@ -234,22 +255,22 @@ export function OrgTreeNodeRow({
             <Stats $columns={descendantTitle ? 3 : 2}>
               <Stat>
                 <StatLabel>Всего</StatLabel>
-                <StatValue>{headcountFormat.format(totalHeadcount)}</StatValue>
+                <StatValue>{formatHeadcount(totalHeadcount)}</StatValue>
               </Stat>
               <Stat>
                 <StatLabel>Своих</StatLabel>
-                <StatValue>{headcountFormat.format(ownHeadcount)}</StatValue>
+                <StatValue>{formatHeadcount(ownHeadcount)}</StatValue>
               </Stat>
               {descendantTitle ? (
                 <Stat>
                   <StatLabel>{descendantTitle}</StatLabel>
-                  <StatValue>{headcountFormat.format(descendantHeadcount)}</StatValue>
+                  <StatValue>{formatHeadcount(descendantHeadcount)}</StatValue>
                 </Stat>
               ) : null}
             </Stats>
           </>
         ) : (
-          <UnitLabel>Сотрудников: {headcountFormat.format(ownHeadcount)}</UnitLabel>
+          <UnitLabel>Сотрудников: {formatHeadcount(ownHeadcount)}</UnitLabel>
         )}
     </Card>
   )
