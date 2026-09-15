@@ -1,13 +1,13 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { ThemeProvider } from 'styled-components'
-import { App } from '@/app/App'
-import { GlobalStyle } from '@/ui/GlobalStyle'
-import { theme } from '@/ui/theme'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { ThemeProvider } from 'styled-components';
+import { App } from '@/app/App';
+import { GlobalStyle } from '@/ui/GlobalStyle';
+import { theme } from '@/ui/theme';
 
-const root = document.getElementById('root')
+const root = document.getElementById('root');
 if (!root) {
-  throw new Error('Root element #root not found')
+  throw new Error('Root element #root not found');
 }
 
 createRoot(root).render(
@@ -17,4 +17,4 @@ createRoot(root).render(
       <App />
     </ThemeProvider>
   </StrictMode>,
-)
+);

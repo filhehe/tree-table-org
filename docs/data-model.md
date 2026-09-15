@@ -7,14 +7,14 @@
 
 Плоский элемент `GET /api/org-tree`. Клиент валидирует **весь массив** через zod; любой сбой схемы → состояние `error`, дерево не строится.
 
-| Поле          | Тип              | Инвариант                                    |
-| ------------- | ---------------- | -------------------------------------------- |
-| `id`          | `string`         | непустой, уникален в ответе                  |
-| `name`        | `string`         | непустой                                     |
-| `parentId`    | `string \| null` | `null` = корень; иначе id существующего узла |
-| `headcount`   | `number`         | целое ≥ 0                                    |
-| `budget`      | `number`         | целое ≥ 0, рубли                             |
-| `performance` | `number`         | 0…100 включительно                           |
+| Поле          | Тип              | Инвариант                                       |
+| ------------- | ---------------- | ----------------------------------------------- |
+| `id`          | `string`         | непустой, уникален в ответе                     |
+| `name`        | `string`         | непустой                                        |
+| `parentId`    | `string \| null` | `null` = корень; иначе id существующего узла    |
+| `headcount`   | `number`         | целое ≥ 0                                       |
+| `budget`      | `number`         | целое ≥ 0, рубли                                |
+| `performance` | `number`         | 0…100 включительно                              |
 | `updatedAt`   | `string`         | ISO-8601 datetime с timezone (`Z` или `±HH:MM`) |
 
 ```ts
@@ -27,7 +27,7 @@ orgNodeSchema = {
   budget: z.number().int().nonnegative(),
   performance: z.number().min(0).max(100),
   updatedAt: z.iso.datetime({ offset: true }),
-}
+};
 ```
 
 ### Инварианты графа

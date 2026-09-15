@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled, { css } from 'styled-components';
 
 const CenterPanel = styled.section`
   flex: 1;
@@ -10,26 +10,26 @@ const CenterPanel = styled.section`
   gap: ${({ theme }) => theme.space.md};
   padding: ${({ theme }) => theme.space.xl};
   text-align: center;
-`
+`;
 
 const Title = styled.p`
   margin: 0;
   color: ${({ theme }) => theme.colors.text};
   font-size: 16px;
   font-weight: 600;
-`
+`;
 
 const Face = styled.span`
   font-size: 48px;
   line-height: 1;
-`
+`;
 
 const Actions = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-`
+`;
 
 const actionState = css`
   transition:
@@ -55,7 +55,7 @@ const actionState = css`
     outline: 1px solid ${({ theme }) => theme.colors.accent};
     outline-offset: 2px;
   }
-`
+`;
 
 const ActionButton = styled.button`
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -65,7 +65,7 @@ const ActionButton = styled.button`
   padding: 8px 14px;
   cursor: pointer;
   ${actionState}
-`
+`;
 
 const SupportLink = styled.a`
   display: inline-flex;
@@ -80,15 +80,15 @@ const SupportLink = styled.a`
   text-decoration: none;
   line-height: 1.35;
   ${actionState}
-`
+`;
 
 const SUPPORT_HREF =
-  'mailto:support@orgtree.dev?subject=%D0%9E%D1%88%D0%B8%D0%B1%D0%BA%D0%B0%20%D0%B7%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B8%20%D0%BE%D1%80%D0%B3-%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%82%D1%83%D1%80%D1%8B'
+  'mailto:support@orgtree.dev?subject=%D0%9E%D1%88%D0%B8%D0%B1%D0%BA%D0%B0%20%D0%B7%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B8%20%D0%BE%D1%80%D0%B3-%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%82%D1%83%D1%80%D1%8B';
 
 type StatusPanelProps = {
-  kind: 'error' | 'empty'
-  onRetry?: () => void
-}
+  kind: 'error' | 'empty';
+  onRetry?: () => void;
+};
 
 export function StatusPanel({ kind, onRetry }: StatusPanelProps) {
   if (kind === 'empty') {
@@ -104,7 +104,7 @@ export function StatusPanel({ kind, onRetry }: StatusPanelProps) {
           </ActionButton>
         ) : null}
       </CenterPanel>
-    )
+    );
   }
 
   return (
@@ -119,10 +119,8 @@ export function StatusPanel({ kind, onRetry }: StatusPanelProps) {
             Обновить
           </ActionButton>
         ) : null}
-        <SupportLink href={SUPPORT_HREF}>
-          Если ошибка будет повторяться, напишите нам
-        </SupportLink>
+        <SupportLink href={SUPPORT_HREF}>Если ошибка будет повторяться, напишите нам</SupportLink>
       </Actions>
     </CenterPanel>
-  )
+  );
 }

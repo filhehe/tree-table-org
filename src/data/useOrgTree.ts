@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from 'react';
 import {
   getOrgTreeServerSnapshot,
   getOrgTreeSnapshot,
@@ -7,14 +7,14 @@ import {
   setNameQuery,
   subscribeOrgTree,
   toggleExpanded,
-} from '@/data/store'
+} from '@/data/store';
 
 export function useOrgTree() {
   const state = useSyncExternalStore(
     subscribeOrgTree,
     getOrgTreeSnapshot,
     getOrgTreeServerSnapshot,
-  )
+  );
 
   return {
     ...state,
@@ -22,5 +22,5 @@ export function useOrgTree() {
     toggleExpanded,
     selectNode,
     setNameQuery,
-  }
+  };
 }

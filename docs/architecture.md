@@ -116,10 +116,10 @@ sequenceDiagram
 Один внешний store, подписка через `useSyncExternalStore` ([ADR 001](adr/001-swr-cache-layer.md)).
 
 ```ts
-type ConnectionStatus = "live" | "reconnecting" | "offline";
+type ConnectionStatus = 'live' | 'reconnecting' | 'offline';
 
 type OrgTreeState = {
-  status: "idle" | "loading" | "error" | "empty" | "ready";
+  status: 'idle' | 'loading' | 'error' | 'empty' | 'ready';
   error: Error | null;
   nodesById: Map<string, OrgNode>;
   childrenByParent: Map<string | null, string[]>;
@@ -144,15 +144,15 @@ type OrgTreeState = {
 
 Ключ: `org-tree` + нормализованный query без `delay` (`src/data/orgTreeCacheKey.ts`). Stale time: **5000 мс**. Поведение: stale-while-revalidate. Смена `scenario`/`status` = другой слот (miss), не «свежий» чужой snapshot.
 
-| Событие                  | Сеть       | UI                                                  |
-| ------------------------ | ---------- | --------------------------------------------------- |
-| Первый mount, cache miss | GET        | loading → ready/empty/error                         |
-| Mount, тот же ключ, age < 5 с | нет   | сразу snapshot                                      |
-| Mount, тот же ключ, age ≥ 5 с | GET в фоне | сразу stale, затем замена                      |
-| Mount, другой ключ       | GET        | loading; expandedIds сбрасываются на default        |
-| Переключение вида        | нет        | тот же snapshot                                     |
-| SSE-патч                 | нет        | in-place + инкремент агрегатов                      |
-| Retry после error        | GET force  | `loading`, кэш не используем; last-good нет, пока GET не успел |
+| Событие                       | Сеть       | UI                                                             |
+| ----------------------------- | ---------- | -------------------------------------------------------------- |
+| Первый mount, cache miss      | GET        | loading → ready/empty/error                                    |
+| Mount, тот же ключ, age < 5 с | нет        | сразу snapshot                                                 |
+| Mount, тот же ключ, age ≥ 5 с | GET в фоне | сразу stale, затем замена                                      |
+| Mount, другой ключ            | GET        | loading; expandedIds сбрасываются на default                   |
+| Переключение вида             | нет        | тот же snapshot                                                |
+| SSE-патч                      | нет        | in-place + инкремент агрегатов                                 |
+| Retry после error             | GET force  | `loading`, кэш не используем; last-good нет, пока GET не успел |
 
 In-flight GET дедуплицируется **внутри ключа**: два подписчика на тот же payload = один запрос; другой `scenario` — отдельный inflight.
 
@@ -176,8 +176,8 @@ Reconnect: экспоненциальный backoff на клиенте. Инд�
 - Дерево: рекурсивное (десятки узлов, виртуализацию пока решил не делать). Узел: `name`, `headcount`, цветовой индикатор `performance` (0–40 / 41–70 / 71–100).
 - Раскрытие: height transition; при `prefers-reduced-motion: reduce` — без анимации.
 - ≥1280px: split-view дерево+таблица. Ниже: переключатель «Дерево / Таблица».
-- Таблица: колонки Подразделение, Уровень, Всего сотрудников, Бюджет суммарный, Средняя эффективность. Клик — сортировка asc; двойной клик — desc. Фильтр имени debounce 250 мс. Бюджет: `12 345 678 руб.`
-- Клавиатура таблицы: ArrowUp/Down, Home/End, Enter (выбор = клик по строке).
+- Таблица: колонки Подразделение, Уровень, Всего сотрудников, Бюджет суммарный, Средняя эффективность. Клик — сортировка asc; повторный клик снимает; двойной клик — desc; повторный двойной снимает. Фильтр имени debounce 250 мс. Бюджет: `12 345 678 руб.`
+- Клавиатура таблицы: стрелки/Home/End двигают курсор по строкам (не меняют `selectedId`); Enter — выделить строку как клик. Escape или клик вне строки/карточки снимает `selectedId`.
 - Поиск: substring по имени; NL → `StructuredFilter` с fallback на текст ([ADR 004](adr/004-nl-search.md)).
 
 ## Сервер
@@ -201,9 +201,9 @@ browser → nginx:80 → static dist/ (gzip)
 
 ## Карта этапов
 
-| Тег      | Что появляется в этом слое                                   |
-| -------- | ------------------------------------------------------------ |
+| Тег      | Что появляется в этом слое                                                |
+| -------- | ------------------------------------------------------------------------- |
 | `step/1` | schema, http, cache, дерево, `aggregateTree` + тесты, loading/error/empty |
-| `step/2` | таблица, сортировка, debounce, selection, split-view         |
-| `step/3` | SSE, `applyPatch`, fade, backoff, keyboard, tree animation   |
-| `step/4` | docker/nginx, NL-поиск, README/GIF                           |
+| `step/2` | таблица, сортировка, debounce, selection, split-view                      |
+| `step/3` | SSE, `applyPatch`, fade, backoff, keyboard, tree animation                |
+| `step/4` | docker/nginx, NL-поиск, README/GIF                                        |

@@ -1,21 +1,40 @@
-import styled from 'styled-components'
-import { OrgTreeNodeRow } from '@/ui/OrgTreeNodeRow'
-import type { Aggregate, OrgNode } from '@/domain/types'
+import { memo } from 'react';
+import styled from 'styled-components';
+import { selectNode, toggleExpanded } from '@/data/store';
+import {
+  useOrgChildren,
+  useOrgExpanded,
+  useOrgRoots,
+  useOrgSelected,
+  useOrgTreeSelector,
+} from '@/data/useOrgTreeSelector';
+import { Expandable } from '@/ui/Expandable';
+import { OrgTreeNodeRow } from '@/ui/OrgTreeNodeRow';
 
 const Tree = styled.div`
   padding: ${({ theme }) => theme.space.md} ${({ theme }) => theme.space.lg};
   width: max-content;
   min-width: 100%;
-`
+`;
 
 const Branch = styled.div`
   position: relative;
-`
+
+  &:hover {
+    z-index: 3;
+  }
+`;
 
 const NodeRow = styled.div<{ $connect: boolean }>`
   position: relative;
   display: flex;
   width: fit-content;
+  z-index: 0;
+
+  &:hover,
+  &:focus-within {
+    z-index: 3;
+  }
 
   ${({ $connect, theme }) =>
     $connect
@@ -31,7 +50,7 @@ const NodeRow = styled.div<{ $connect: boolean }>`
     }
   `
       : ''}
-`
+`;
 
 const LastRailMask = styled.span`
   position: absolute;
@@ -42,7 +61,7 @@ const LastRailMask = styled.span`
   background: ${({ theme }) => theme.colors.surface};
   z-index: 1;
   pointer-events: none;
-`
+`;
 
 const LastRailFill = styled.span`
   position: absolute;
@@ -53,7 +72,7 @@ const LastRailFill = styled.span`
   background: ${({ theme }) => theme.colors.surface};
   z-index: 1;
   pointer-events: none;
-`
+`;
 
 const ChildList = styled.div`
   position: relative;
@@ -67,29 +86,15 @@ const ChildList = styled.div`
     bottom: 0;
     border-left: 1px dotted ${({ theme }) => theme.colors.muted};
   }
-`
+`;
 
 type OrgTreeProps = {
-  roots: string[]
-  nodesById: Map<string, OrgNode>
-  childrenByParent: Map<string | null, string[]>
-  aggregates: Map<string, Aggregate>
-  expandedIds: Set<string>
-  selectedId: string | null
-  onToggle: (id: string) => void
-  onSelect: (id: string) => void
-}
+  onSelect?: (id: string) => void;
+};
 
-export function OrgTree({
-  roots,
-  nodesById,
-  childrenByParent,
-  aggregates,
-  expandedIds,
-  selectedId,
-  onToggle,
-  onSelect,
-}: OrgTreeProps) {
+export const OrgTree = memo(function OrgTree({ onSelect }: OrgTreeProps) {
+  const roots = useOrgRoots();
+  const select = onSelect ?? selectNode;
 
   return (
     <Tree role="tree" aria-label="Орг-структура">
@@ -97,87 +102,60 @@ export function OrgTree({
         <OrgTreeBranch
           key={id}
           id={id}
-          nodesById={nodesById}
-          childrenByParent={childrenByParent}
-          aggregates={aggregates}
-          expandedIds={expandedIds}
-          selectedId={selectedId}
           isLast={index === roots.length - 1}
           isRoot
-          onToggle={onToggle}
-          onSelect={onSelect}
+          onSelect={select}
         />
       ))}
     </Tree>
-  )
-}
+  );
+});
 
 type BranchProps = {
-  id: string
-  nodesById: Map<string, OrgNode>
-  childrenByParent: Map<string | null, string[]>
-  aggregates: Map<string, Aggregate>
-  expandedIds: Set<string>
-  selectedId: string | null
-  isLast: boolean
-  isRoot: boolean
-  onToggle: (id: string) => void
-  onSelect: (id: string) => void
-}
+  id: string;
+  isLast: boolean;
+  isRoot: boolean;
+  onSelect: (id: string) => void;
+};
 
-function OrgTreeBranch({
-  id,
-  nodesById,
-  childrenByParent,
-  aggregates,
-  expandedIds,
-  selectedId,
-  isLast,
-  isRoot,
-  onToggle,
-  onSelect,
-}: BranchProps) {
-  const node = nodesById.get(id)
-  if (!node) return null
+function OrgTreeBranch({ id, isLast, isRoot, onSelect }: BranchProps) {
+  const exists = useOrgTreeSelector((state) => state.nodesById.has(id));
+  const children = useOrgChildren(id);
+  const expanded = useOrgExpanded(id);
+  const selected = useOrgSelected(id);
+  if (!exists) return null;
 
-  const children = childrenByParent.get(id) ?? []
-  const hasChildren = children.length > 0
-  const expanded = expandedIds.has(id)
+  const hasChildren = children.length > 0;
 
   return (
     <Branch>
       <NodeRow $connect={!isRoot}>
         {!isRoot && isLast ? <LastRailMask /> : null}
         <OrgTreeNodeRow
-          node={node}
-          aggregate={aggregates.get(id)}
+          id={id}
           hasChildren={hasChildren}
           expanded={expanded}
-          selected={id === selectedId}
-          onToggle={onToggle}
+          selected={selected}
+          onToggle={toggleExpanded}
           onSelect={onSelect}
         />
       </NodeRow>
-      {hasChildren && expanded ? (
-        <ChildList>
-          {!isRoot && isLast ? <LastRailFill /> : null}
-          {children.map((childId, index) => (
-            <OrgTreeBranch
-              key={childId}
-              id={childId}
-              nodesById={nodesById}
-              childrenByParent={childrenByParent}
-              aggregates={aggregates}
-              expandedIds={expandedIds}
-              selectedId={selectedId}
-              isLast={index === children.length - 1}
-              isRoot={false}
-              onToggle={onToggle}
-              onSelect={onSelect}
-            />
-          ))}
-        </ChildList>
+      {hasChildren ? (
+        <Expandable id={id} open={expanded}>
+          <ChildList>
+            {!isRoot && isLast ? <LastRailFill /> : null}
+            {children.map((childId, index) => (
+              <OrgTreeBranch
+                key={childId}
+                id={childId}
+                isLast={index === children.length - 1}
+                isRoot={false}
+                onSelect={onSelect}
+              />
+            ))}
+          </ChildList>
+        </Expandable>
       ) : null}
     </Branch>
-  )
+  );
 }

@@ -56,7 +56,7 @@ rawQuery → parseNl(rawQuery) → StructuredFilter | null
 ```ts
 function parseNl(query: string): {
   filter: StructuredFilter;
-  mode: "structured" | "text";
+  mode: 'structured' | 'text';
 };
 ```
 

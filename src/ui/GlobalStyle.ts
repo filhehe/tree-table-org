@@ -1,4 +1,4 @@
-import { createGlobalStyle } from 'styled-components'
+import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyle = createGlobalStyle`
   *, *::before, *::after {
@@ -44,6 +44,16 @@ export const GlobalStyle = createGlobalStyle`
     background: ${({ theme }) => theme.colors.surface};
   }
 
+  @keyframes org-flash-a {
+    from { background-color: rgba(61, 156, 143, 0.32); }
+    to { background-color: transparent; }
+  }
+
+  @keyframes org-flash-b {
+    from { background-color: rgba(61, 156, 143, 0.32); }
+    to { background-color: transparent; }
+  }
+
   body {
     margin: 0;
     background: ${({ theme }) => theme.colors.bg};
@@ -56,4 +66,4 @@ export const GlobalStyle = createGlobalStyle`
   button {
     font: inherit;
   }
-`
+`;

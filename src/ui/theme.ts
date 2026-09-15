@@ -1,4 +1,4 @@
-import type { DefaultTheme } from 'styled-components'
+import type { DefaultTheme } from 'styled-components';
 
 export const theme: DefaultTheme = {
   colors: {
@@ -29,4 +29,4 @@ export const theme: DefaultTheme = {
     sans: 'Inter, "Segoe UI", system-ui, sans-serif',
     mono: '"IBM Plex Mono", ui-monospace, monospace',
   },
-}
+};

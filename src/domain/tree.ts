@@ -1,4 +1,4 @@
-import { OrgGraphError, type OrgIndex, type OrgNode } from "@/domain/types";
+import { OrgGraphError, type OrgIndex, type OrgNode } from '@/domain/types';
 
 export function buildTree(nodes: OrgNode[]): OrgIndex {
   const nodesById = new Map<string, OrgNode>();
@@ -14,9 +14,7 @@ export function buildTree(nodes: OrgNode[]): OrgIndex {
 
   for (const node of nodes) {
     if (node.parentId !== null && !nodesById.has(node.parentId)) {
-      throw new OrgGraphError(
-        `Несуществующий parentId: ${node.parentId} (узел ${node.id})`,
-      );
+      throw new OrgGraphError(`Несуществующий parentId: ${node.parentId} (узел ${node.id})`);
     }
 
     const siblings = childrenByParent.get(node.parentId);
@@ -77,21 +75,18 @@ export function expandAncestors(
   nodesById: Map<string, OrgNode>,
   expandedIds: Set<string>,
 ): Set<string> {
-  const next = new Set(expandedIds)
-  let current = nodesById.get(id)?.parentId ?? null
+  const next = new Set(expandedIds);
+  let current = nodesById.get(id)?.parentId ?? null;
 
   while (current) {
-    next.add(current)
-    current = nodesById.get(current)?.parentId ?? null
+    next.add(current);
+    current = nodesById.get(current)?.parentId ?? null;
   }
 
-  return next
+  return next;
 }
 
-export function pruneExpandedIds(
-  expandedIds: Set<string>,
-  index: OrgIndex,
-): Set<string> {
+export function pruneExpandedIds(expandedIds: Set<string>, index: OrgIndex): Set<string> {
   const next = new Set<string>();
   for (const id of expandedIds) {
     if (index.nodesById.has(id)) next.add(id);

@@ -1,6 +1,6 @@
-import type { OrgNode } from '@/domain/types'
+import type { OrgNode } from '@/domain/types';
 
-export const UPDATED_AT = '2026-09-15T12:00:00.000Z'
+export const UPDATED_AT = '2026-09-15T12:00:00.000Z';
 
 export function orgNode(
   id: string,
@@ -15,5 +15,5 @@ export function orgNode(
     budget: fields.budget ?? 0,
     performance: fields.performance ?? 0,
     updatedAt: fields.updatedAt ?? UPDATED_AT,
-  }
+  };
 }
