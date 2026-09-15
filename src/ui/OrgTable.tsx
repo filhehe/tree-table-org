@@ -10,8 +10,9 @@ import {
   useOrgUpdatedTick,
 } from '@/data/useOrgTreeSelector';
 import { formatBudget, formatHeadcount, formatLevel, formatPerformance } from '@/domain/format';
+import { parseNl } from '@/domain/nlSearch';
 import {
-  filterRowsByName,
+  filterRows,
   nextHeaderSort,
   projectTableRows,
   sortRows,
@@ -126,8 +127,12 @@ export const OrgTable = memo(function OrgTable({ onSelect }: OrgTableProps) {
   const [cursorId, setCursorId] = useState<string | null>(null);
   const [sort, setSort] = useState<TableSort | null>(null);
   const clickTimer = useRef<number>(0);
+  const filter = useMemo(() => parseNl(nameQuery).filter, [nameQuery]);
   const sortSignature = sort ? `${sort.column}:${sort.direction}` : '';
-  const aggregates = useOrgTreeSelector((state) => (sortSignature ? state.aggregates : null));
+  const liveNumeric = Boolean(filter.performance || filter.budget || filter.headcount);
+  const aggregates = useOrgTreeSelector((state) =>
+    sortSignature || liveNumeric ? state.aggregates : null,
+  );
 
   useEffect(() => {
     return () => window.clearTimeout(clickTimer.current);
@@ -142,10 +147,10 @@ export const OrgTable = memo(function OrgTable({ onSelect }: OrgTableProps) {
       levels: new Map(),
     };
     const projected = projectTableRows(index, snapshot.aggregates);
-    const filtered = filterRowsByName(projected, nameQuery);
+    const filtered = filterRows(projected, filter);
     const ordered = sort ? sortRows(filtered, sort.column, sort.direction) : filtered;
     return ordered.map((row) => row.id);
-  }, [aggregates, childrenByParent, nameQuery, sort]);
+  }, [aggregates, childrenByParent, filter, sort]);
 
   useEffect(() => {
     setCursorId((current) => {
@@ -192,7 +197,7 @@ export const OrgTable = memo(function OrgTable({ onSelect }: OrgTableProps) {
   };
 
   if (ids.length === 0) {
-    return <Empty>Ничего не найдено по названию.</Empty>;
+    return <Empty>Ничего не найдено.</Empty>;
   }
 
   return (

@@ -1,13 +1,18 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import styled from 'styled-components';
 import { selectNode, toggleExpanded } from '@/data/store';
 import {
+  useOrgAggregate,
   useOrgChildren,
   useOrgExpanded,
+  useOrgNameQuery,
+  useOrgNode,
   useOrgRoots,
   useOrgSelected,
   useOrgTreeSelector,
 } from '@/data/useOrgTreeSelector';
+import { isFilterActive, matchesFilter, parseNl } from '@/domain/nlSearch';
+import type { StructuredFilter } from '@/domain/types';
 import { Expandable } from '@/ui/Expandable';
 import { OrgTreeNodeRow } from '@/ui/OrgTreeNodeRow';
 
@@ -95,6 +100,8 @@ type OrgTreeProps = {
 export const OrgTree = memo(function OrgTree({ onSelect }: OrgTreeProps) {
   const roots = useOrgRoots();
   const select = onSelect ?? selectNode;
+  const nameQuery = useOrgNameQuery();
+  const filter = useMemo(() => parseNl(nameQuery).filter, [nameQuery]);
 
   return (
     <Tree role="tree" aria-label="Орг-структура">
@@ -104,6 +111,7 @@ export const OrgTree = memo(function OrgTree({ onSelect }: OrgTreeProps) {
           id={id}
           isLast={index === roots.length - 1}
           isRoot
+          filter={filter}
           onSelect={select}
         />
       ))}
@@ -115,17 +123,34 @@ type BranchProps = {
   id: string;
   isLast: boolean;
   isRoot: boolean;
+  filter: StructuredFilter;
   onSelect: (id: string) => void;
 };
 
-function OrgTreeBranch({ id, isLast, isRoot, onSelect }: BranchProps) {
+function OrgTreeBranch({ id, isLast, isRoot, filter, onSelect }: BranchProps) {
   const exists = useOrgTreeSelector((state) => state.nodesById.has(id));
   const children = useOrgChildren(id);
   const expanded = useOrgExpanded(id);
   const selected = useOrgSelected(id);
+  const node = useOrgNode(id);
+  const aggregate = useOrgAggregate(id);
   if (!exists) return null;
 
   const hasChildren = children.length > 0;
+  const dimmed =
+    isFilterActive(filter) &&
+    (!node ||
+      !aggregate ||
+      !matchesFilter(
+        {
+          name: node.name,
+          level: aggregate.level,
+          totalHeadcount: aggregate.totalHeadcount,
+          totalBudget: aggregate.totalBudget,
+          weightedPerformance: aggregate.weightedPerformance,
+        },
+        filter,
+      ));
 
   return (
     <Branch>
@@ -136,6 +161,7 @@ function OrgTreeBranch({ id, isLast, isRoot, onSelect }: BranchProps) {
           hasChildren={hasChildren}
           expanded={expanded}
           selected={selected}
+          dimmed={dimmed}
           onToggle={toggleExpanded}
           onSelect={onSelect}
         />
@@ -150,6 +176,7 @@ function OrgTreeBranch({ id, isLast, isRoot, onSelect }: BranchProps) {
                 id={childId}
                 isLast={index === children.length - 1}
                 isRoot={false}
+                filter={filter}
                 onSelect={onSelect}
               />
             ))}

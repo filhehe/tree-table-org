@@ -196,19 +196,29 @@ NL-поиск накладывает `StructuredFilter` поверх той же
 ## Структурированный фильтр
 
 ```ts
+type CompareOp = 'lt' | 'gt' | 'eq';
+
+type NumericFilter = {
+  op: CompareOp;
+  value: number;
+};
+
+type NumericConstraint = NumericFilter | NumericFilter[];
+
 type StructuredFilter = {
-  nameContains?: string;
+  text?: string;
   level?: number;
-  minHeadcount?: number;
-  maxHeadcount?: number;
-  minBudget?: number;
-  maxBudget?: number;
-  minPerformance?: number;
-  maxPerformance?: number;
+  performance?: NumericConstraint;
+  budget?: NumericConstraint;
+  headcount?: NumericConstraint;
 };
 ```
 
-Пустой объект = нет NL-ограничений. Неизвестные фразы → fallback: `{ nameContains: rawQuery }`.
+Пустой объект = нет NL-ограничений. Не разобрали целиком (мусор, число вне диапазона, оборванное сравнение) → `{ text: исходнаяСтрока }`, обычный substring по `name`.
+
+Два сравнения на одном поле (`больше 5 и меньше 10`) → массив из `gt` и `lt`. `eq` с диапазоном не комбинируется.
+
+`performance.value` — 0…100. `budget` / `headcount` — целые ≥ 0. Схема `.strict()`: лишние ключи и неизвестный `op` не проходят — как будто ответ «от модели».
 
 ## Тесты домена (обязательный unit-тест)
 

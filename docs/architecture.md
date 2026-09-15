@@ -127,7 +127,6 @@ type OrgTreeState = {
   selectedId: string | null;
   expandedIds: Set<string>;
   nameQuery: string;
-  structuredFilter: StructuredFilter | null;
   connectionStatus: ConnectionStatus;
   updatedIds: Map<string, number>; // id → timestamp fade
 };
@@ -197,7 +196,7 @@ browser → nginx:80 → static dist/ (gzip)
                   → /api/* → server:port
 ```
 
-Конфиг через `.env` (`API` origin в dev, в prod — относительный `/api`). `docker compose up` поднимает nginx + server (+ сборка клиента).
+Конфиг через `.env` (`CLIENT_PORT`, `SERVER_PORT`, `SERVER_HOST`, `MUTATE_MIN_MS` / `MUTATE_MAX_MS`). В контейнере сервер слушает `0.0.0.0`. `docker compose up --build` поднимает nginx + server.
 
 ## Карта этапов
 

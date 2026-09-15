@@ -1,4 +1,5 @@
-import type { Aggregate, OrgIndex } from '@/domain/types';
+import { matchesFilter } from '@/domain/nlSearch';
+import type { Aggregate, OrgIndex, StructuredFilter } from '@/domain/types';
 
 export type TableRow = {
   id: string;
@@ -58,6 +59,10 @@ export function filterRowsByName(rows: TableRow[], query: string): TableRow[] {
   const needle = query.trim().toLocaleLowerCase('ru-RU');
   if (!needle) return rows;
   return rows.filter((row) => row.name.toLocaleLowerCase('ru-RU').includes(needle));
+}
+
+export function filterRows(rows: TableRow[], filter: StructuredFilter): TableRow[] {
+  return rows.filter((row) => matchesFilter(row, filter));
 }
 
 function compareRows(a: TableRow, b: TableRow, column: SortColumn): number {

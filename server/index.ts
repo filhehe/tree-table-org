@@ -1,10 +1,14 @@
 import http from 'node:http';
+import { loadDotEnv, envInt } from './env.ts';
 import { generateOrgTree, getOrgTreeStats } from './generate.ts';
 import { parseDelay, sendJson } from './helpers.ts';
 import { mutateTree, nextMutateDelayMs } from './mutate.ts';
 import { attachSseClient, broadcastPatch } from './sse.ts';
 
-const PORT = Number(process.env.SERVER_PORT ?? process.env.PORT ?? 3001);
+loadDotEnv();
+
+const PORT = envInt('SERVER_PORT', envInt('PORT', 3001));
+const HOST = process.env.SERVER_HOST || '127.0.0.1';
 const TREE = generateOrgTree();
 const stats = getOrgTreeStats(TREE);
 
@@ -86,7 +90,7 @@ const server = http.createServer((req, res) => {
   respond();
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`API http://127.0.0.1:${PORT}/api/org-tree`);
+server.listen(PORT, HOST, () => {
+  console.log(`API http://${HOST}:${PORT}/api/org-tree`);
   scheduleMutate();
 });

@@ -82,5 +82,9 @@ export function mutateTree(tree: OrgNodeDto[]): OrgPatchDto[] {
 }
 
 export function nextMutateDelayMs() {
-  return randomInt(3_000, 5_000);
+  const min = Number(process.env.MUTATE_MIN_MS ?? 3_000);
+  const max = Number(process.env.MUTATE_MAX_MS ?? 5_000);
+  const lo = Number.isFinite(min) ? min : 3_000;
+  const hi = Number.isFinite(max) ? max : 5_000;
+  return randomInt(Math.min(lo, hi), Math.max(lo, hi));
 }

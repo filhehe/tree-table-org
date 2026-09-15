@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { clearSelection, retryOrgTree, selectNode, setNameQuery } from '@/data/store';
 import { useOrgNameQuery, useOrgSelectedId, useOrgStatus } from '@/data/useOrgTreeSelector';
+import { parseNl } from '@/domain/nlSearch';
 import { OrgTable } from '@/ui/OrgTable';
 import { OrgTree } from '@/ui/OrgTree';
 import { PaneSkeleton } from '@/ui/PaneSkeleton';
@@ -32,7 +33,7 @@ const Toolbar = styled.div`
 const Search = styled.input`
   flex: 1;
   min-width: 180px;
-  max-width: 360px;
+  max-width: 420px;
   padding: 8px 10px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 8px;
@@ -46,6 +47,17 @@ const Search = styled.input`
   &:focus {
     outline: 1px solid ${({ theme }) => theme.colors.accent};
   }
+`;
+
+const FilterBadge = styled.span`
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.selected};
+  color: ${({ theme }) => theme.colors.accent};
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 `;
 
 const Toggle = styled.div`
@@ -113,6 +125,7 @@ export function Workspace() {
   const [draft, setDraft] = useState(nameQuery);
   const [panesReady, setPanesReady] = useState(status === 'ready');
   const debounced = useDebouncedValue(draft, NAME_FILTER_DEBOUNCE_MS);
+  const searchMode = useMemo(() => parseNl(debounced).mode, [debounced]);
 
   useEffect(() => {
     setNameQuery(debounced);
@@ -177,10 +190,11 @@ export function Workspace() {
         <Search
           type="search"
           value={draft}
-          placeholder="Фильтр по названию"
-          aria-label="Фильтр по названию"
+          placeholder="Поиск или фильтр: команды ниже 60"
+          aria-label="Поиск и NL-фильтр"
           onChange={(event) => setDraft(event.target.value)}
         />
+        {searchMode === 'structured' ? <FilterBadge>Фильтр</FilterBadge> : null}
         <Toggle role="tablist" aria-label="Вид">
           <ToggleButton
             type="button"

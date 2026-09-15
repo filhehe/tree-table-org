@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { aggregateTree } from '@/domain/aggregate';
 import { orgNode } from '@/domain/orgNode.fixture';
-import { filterRowsByName, nextHeaderSort, projectTableRows, sortRows } from '@/domain/table';
+import {
+  filterRows,
+  filterRowsByName,
+  nextHeaderSort,
+  projectTableRows,
+  sortRows,
+} from '@/domain/table';
 import { buildTree } from '@/domain/tree';
 
 function rowsOf(...nodes: Parameters<typeof buildTree>[0]) {
@@ -34,6 +40,42 @@ describe('projectTableRows', () => {
       totalBudget: 40,
       weightedPerformance: 100,
     });
+  });
+});
+
+describe('filterRows', () => {
+  const rows = rowsOf(
+    orgNode('div', 'Дивизион', { headcount: 1, budget: 10, performance: 90 }),
+    orgNode('pay', 'Платежи', { parentId: 'div', headcount: 2, budget: 20, performance: 40 }),
+    orgNode('team', 'Alpha', { parentId: 'pay', headcount: 3, budget: 30, performance: 50 }),
+  );
+
+  it('скрывает строки вне structured-фильтра', () => {
+    expect(
+      filterRows(rows, { level: 2, performance: { op: 'lt', value: 60 } }).map((row) => row.id),
+    ).toEqual(['team']);
+  });
+});
+
+describe('filterRows — диапазон численности', () => {
+  const rows = rowsOf(
+    orgNode('div', 'Дивизион', { headcount: 0 }),
+    orgNode('dep', 'Отдел', { parentId: 'div', headcount: 0 }),
+    orgNode('small', 'Small', { parentId: 'dep', headcount: 3 }),
+    orgNode('mid', 'Mid', { parentId: 'dep', headcount: 7 }),
+    orgNode('big', 'Big', { parentId: 'dep', headcount: 12 }),
+  );
+
+  it('оставляет команды с 5 < сотрудники < 10', () => {
+    expect(
+      filterRows(rows, {
+        level: 2,
+        headcount: [
+          { op: 'gt', value: 5 },
+          { op: 'lt', value: 10 },
+        ],
+      }).map((row) => row.id),
+    ).toEqual(['mid']);
   });
 });
 

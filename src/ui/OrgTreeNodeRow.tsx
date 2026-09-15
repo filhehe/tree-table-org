@@ -5,7 +5,7 @@ import { useOrgAggregate, useOrgNode, useOrgUpdatedTick } from '@/data/useOrgTre
 import { flashAnimation, flashReduce } from '@/ui/flash';
 import { MOTION_DURATION_MS, usePrefersReducedMotion } from '@/ui/prefersReducedMotion';
 
-const Card = styled.button<{ $selected: boolean }>`
+const Card = styled.button<{ $selected: boolean; $dimmed: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -21,6 +21,7 @@ const Card = styled.button<{ $selected: boolean }>`
   cursor: pointer;
   position: relative;
   z-index: 1;
+  opacity: ${({ $dimmed }) => ($dimmed ? 0.38 : 1)};
 
   &:hover,
   &:focus-within {
@@ -210,6 +211,7 @@ type OrgTreeNodeRowProps = {
   hasChildren: boolean;
   expanded: boolean;
   selected: boolean;
+  dimmed: boolean;
   onToggle: (id: string) => void;
   onSelect: (id: string) => void;
 };
@@ -219,6 +221,7 @@ export function OrgTreeNodeRow({
   hasChildren,
   expanded,
   selected,
+  dimmed,
   onToggle,
   onSelect,
 }: OrgTreeNodeRowProps) {
@@ -249,6 +252,7 @@ export function OrgTreeNodeRow({
       aria-selected={selected}
       data-node-id={node.id}
       $selected={selected}
+      $dimmed={dimmed}
       onClick={() => onSelect(node.id)}
     >
       <CardTop>

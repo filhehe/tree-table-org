@@ -23,6 +23,23 @@ export type Aggregate = {
   weightedPerformance: number;
 };
 
+export type CompareOp = 'lt' | 'gt' | 'eq';
+
+export type NumericFilter = {
+  op: CompareOp;
+  value: number;
+};
+
+export type NumericConstraint = NumericFilter | NumericFilter[];
+
+export type StructuredFilter = {
+  text?: string;
+  level?: number;
+  performance?: NumericConstraint;
+  budget?: NumericConstraint;
+  headcount?: NumericConstraint;
+};
+
 export type OrgPatch = {
   id: string;
   headcount?: number;
